@@ -12,35 +12,27 @@ public class Main {
     public static void main(String[] args) {
         System.out.println("Hello world!");
 
-        String url = "jdbc:postgresql://localhost:5432/postgres";
-        String username = "techtask";
-        String password = "techtask";
 
+        // Создание подключения
         try {
-            // Создание подключения
-            DatabaseConfig dbConfig = new DatabaseConfig(url, username, password);
-            Connection connection = dbConfig.getConnection();
+            // Загрузка конфигурации из application.properties
+            DatabaseConfig config = DatabaseConfig.loadFromProperties("application.properties");
 
-            // Инициализация истории миграций
+            // Установка соединения с базой данных
+            try (Connection connection = config.getConnection()) {
+                System.out.println("Соединение установлено успешно!");
+                // Инициализация истории миграций
+                MigrationService migrationService = new MigrationService(connection);
+                // Применение миграций
 
-            MigrationService migrationService = new MigrationService(connection);
+                MigrateCommand migrateCommand = new MigrateCommand(migrationService);
+                migrateCommand.execute();
 
-            // Применение миграций
-
-            MigrateCommand migrateCommand = new MigrateCommand(migrationService);
-            migrateCommand.execute();
-
-            int currentVersion = migrationService.getCurrentVersion();
-            System.out.println("Current version: " + currentVersion);
-
-
-
-
-            connection.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+                int currentVersion = migrationService.getCurrentVersion();
+                System.out.println("Current version: " + currentVersion);
+            }
+        } catch (Exception e) {
+            System.err.println("Ошибка: " + e.getMessage());
         }
     }
 }

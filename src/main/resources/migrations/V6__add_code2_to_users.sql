@@ -1,0 +1,1 @@
+ALTER TABLE users3 ADD column IF NOT EXISTS code2 INT;

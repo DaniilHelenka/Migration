@@ -10,17 +10,40 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
 
+/**
+ * Этот класс предоставляет функциональность для управления миграциями и откатами баз данных.
+ * <p>
+ * {@code MigrationTool} управляет выполнением SQL-скриптов миграции и сценариев отката.
+ * на основе текущей версии схемы базы данных. Он использует MigrationExecutor для
+ * применения миграций и управления версионированием схемы.
+ * </p>
+ */
 public class MigrationTool {
     private final MigrationExecutor migrationExecutor;
     private final Connection connection;
     private static final Logger logger = LoggerFactory.getLogger(MigrationTool.class);
     private final MigrationFileReader migrationFileReader = new MigrationFileReader();
 
+    /**
+     * Конструирует инструмент MigrationTool с указанным исполнителем MigrationExecutor и подключением к базе данных.
+     *
+     * @param migrationExecutor исполнитель, отвечающий за применение миграций и управление версионированием схем
+     * @param connection        соединение с базой данных, используемое для выполнения SQL-команд
+     */
     public MigrationTool(MigrationExecutor migrationExecutor, Connection connection) {
         this.migrationExecutor = migrationExecutor;
         this.connection = connection;
     }
 
+    /**
+     * Выполняет все ожидающие миграции, чтобы привести схему базы данных в актуальное состояние.
+     * <p>
+     * Этот метод считывает файлы миграций, сравнивает их версии с текущей версией базы данных,
+     * и применяет только необходимые миграции. Если возникает ошибка, процесс миграции откатывается.
+     * </p>
+     *
+     * @throws SQLException, если во время миграции или отката произошла ошибка базы данных
+     */
     public void executeMigration() throws SQLException {
         migrationExecutor.initializeSchemaTable();
         logger.info("Migration starts");
@@ -56,12 +79,23 @@ public class MigrationTool {
         }
     }
 
+    /**
+     * Откатывает схему базы данных к определенной целевой версии.
+     * <p>
+     * Этот метод считывает файлы отката, определяет сценарии, которые необходимо выполнить
+     * для отката к целевой версии, и применяет их в обратном порядке.
+     * Все примененные миграции с версиями выше, чем
+     * целевой версии, удаляются из таблицы отслеживания.
+     * </p>
+     *
+     * @throws SQLException, если во время отката или очистки произошла ошибка базы данных
+     */
     public void executeRollback() throws SQLException {
 
         Scanner scanner = new Scanner(System.in);
 
         System.out.println("Enter operation: [migrate/rollback]");
-        String targetVersion  = scanner.nextLine();
+        String targetVersion = scanner.nextLine();
         logger.info("Rollback starts for target version: " + targetVersion);
 
         try {
@@ -75,7 +109,7 @@ public class MigrationTool {
 
             logger.info("Current database version: " + currentVersion);
 
-            // Fetch rollback files for the range (targetVersion, currentVersion]
+            // Получаем файлы отката для диапазона (targetVersion, currentVersion)
             List<MigrationFile> rollbackFiles = migrationFileReader.getRollbackFiles(targetVersion, currentVersion);
             for (MigrationFile rollbackFile : rollbackFiles) {
                 logger.info("Executing rollback for version: " + rollbackFile.getVersion());
@@ -88,7 +122,7 @@ public class MigrationTool {
                 System.out.println(rollbackFile.getDescription() + rollbackFile.getSql() + rollbackFile.getVersion());
             }
 
-            // Remove applied_migration entries for versions higher than the target version
+            // Удалите записи applied_migration для версий выше целевой версии
             String deleteVersionsSql = "DELETE FROM applied_migration WHERE version > ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(deleteVersionsSql)) {
                 preparedStatement.setString(1, targetVersion);

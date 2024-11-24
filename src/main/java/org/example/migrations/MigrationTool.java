@@ -107,7 +107,7 @@ public class MigrationTool {
 
         Scanner scanner = new Scanner(System.in);
 
-        System.out.println("Enter operation: [migrate/rollback]");
+        System.out.println("Select the rollback version: ");
         String targetVersion = scanner.nextLine();
         logger.info("Rollback starts for target version: " + targetVersion);
 

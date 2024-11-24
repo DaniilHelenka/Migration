@@ -11,6 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Scanner;
+
 /**
  * Точка входа в приложение.
  * <p>
@@ -49,17 +52,51 @@ public class Main {
             // Инициализация инструментов миграции
             MigrationExecutor migrationExecutor = new MigrationExecutor(connection, new MigrationFileReader());
             MigrationTool migrationTool = new MigrationTool(migrationExecutor, connection);
+            //CLI
+            Scanner scanner = new Scanner(System.in);
+            while (true) {
+                System.out.println("Enter command (migrate/rollback/status/exit): ");
+                String command = scanner.nextLine().trim().toLowerCase();
 
+                switch (command) {
+                    case "migrate":
+                        try {
+                            migrationTool.executeMigration();
+                            System.out.println("Migrations applied successfully.");
+                        } catch (SQLException e) {
+                            System.err.println("Migration failed: " + e.getMessage());
+                        }
+                        break;
 
-            // Выполнение миграций и откатов
-            migrationTool.executeMigration();
-            migrationTool.executeRollback();
+                    case "rollback":
+                        try {
+                            migrationTool.executeRollback();
+                            System.out.println("Rollback completed successfully.");
+                        } catch (SQLException e) {
+                            System.err.println("Rollback failed: " + e.getMessage());
+                        }
+                        break;
 
-            // Закрытие соединения
-            connection.close();
-            logger.info("connection is closed");
-        } catch (Exception e) {
-            e.printStackTrace();
+                    case "status":
+                        try {
+                            String currentVersion = migrationExecutor.getCurrentVersion();
+                            System.out.println("Current database version: " + currentVersion);
+                        } catch (SQLException e) {
+                            System.err.println("Failed to retrieve database status: " + e.getMessage());
+                        }
+                        break;
+
+                    case "exit":
+                        System.out.println("Exiting...");
+                        return;
+
+                    default:
+                        System.out.println("Unknown command. Please try again.");
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Database connection failed: " + e.getMessage());
         }
     }
 

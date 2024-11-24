@@ -102,7 +102,7 @@ public class MigrationFileReader {
      * @param fileName имя файла.
      * @return извлеченная версия в виде строки.
      */
-    private String extractVersion(String fileName) {
+    public String extractVersion(String fileName) {
         return fileName.split("__")[0].replace("V", "");
     }
     /**
@@ -115,7 +115,7 @@ public class MigrationFileReader {
      * @param fileName имя файла.
      * @return извлеченное описание в виде строки.
      */
-    private String extractDescription(String fileName) {
+    public String extractDescription(String fileName) {
         return fileName.split("__")[1].replace(".sql", "");
     }
 }

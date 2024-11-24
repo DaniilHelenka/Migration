@@ -48,6 +48,22 @@ public class MigrationExecutor {
             statement.execute(sql);
         }
     }
+    //-------------------------------------
+    public void initializeMigrationLockTable() throws SQLException {
+        String sql = """
+                CREATE TABLE IF NOT EXISTS migration_lock (
+                      id INT PRIMARY KEY,
+                      locked BOOLEAN NOT NULL,
+                      locked_at TIMESTAMP,
+                      locked_by VARCHAR(255)
+                  );
+                """;
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(sql);
+        }
+    }
+
+
     /**
      * Получает список версий всех примененных миграций.
      *
@@ -81,6 +97,68 @@ public class MigrationExecutor {
                 return resultSet.getString("version");
             }
             return null;
+        }
+    }
+    /**
+     * Проверяет, заблокирован ли в данный момент процесс миграции, запрашивая таблицу `migration_lock`.
+     *
+     * <p>Этот метод извлекает статус ``заблокирован'' из таблицы. Если запись о блокировке не существует,
+     * он предполагает, что блокировки нет, и возвращает false.</p>
+     *
+     * @return true, если процесс миграции заблокирован;  false в противном случае.
+     * @throws SQLException, если при взаимодействии с базой данных произошла ошибка.
+     */
+
+    public boolean isLocked() throws SQLException {
+        String sql = "SELECT locked FROM migration_lock WHERE id = 1";
+        try (Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery(sql)) {
+            if (resultSet.next()) {
+                return resultSet.getBoolean("locked");
+            }
+            return false; // Если записи нет, считаем, что блокировки нет
+        }
+    }
+    /**
+     * Блокирует процесс миграции, устанавливая статус `locked` в таблице `migration_lock` на `TRUE`.
+     * Если запись о блокировке существует, то обновляется информация о блокировке. В противном случае создается новая запись о блокировке.
+     *
+     * <p>Этот метод гарантирует, что никакие другие процессы не смогут начать миграцию, пока блокировка не будет снята.</p>
+     *
+     * @param lockedBy - строка, представляющая идентификатор процесса или пользователя, инициировавшего блокировку.
+     * Это значение сохраняется в столбце `locked_by` для целей отслеживания.
+     * @throws SQLException, если при взаимодействии с базой данных произошла ошибка.
+     */
+    public void lockMigration(String lockedBy) throws SQLException {
+        String checkSql = "SELECT COUNT(*) FROM migration_lock WHERE id = 1";
+        String insertSql = "INSERT INTO migration_lock (id, locked, locked_at, locked_by) VALUES (1, TRUE, CURRENT_TIMESTAMP, ?)";
+        String updateSql = "UPDATE migration_lock SET locked = TRUE, locked_at = CURRENT_TIMESTAMP, locked_by = ? WHERE id = 1";
+
+        try (Statement checkStatement = connection.createStatement();
+             ResultSet resultSet = checkStatement.executeQuery(checkSql)) {
+            resultSet.next();
+            boolean exists = resultSet.getInt(1) > 0;
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(exists ? updateSql : insertSql)) {
+                preparedStatement.setString(1, lockedBy);
+                preparedStatement.executeUpdate();
+            }
+        }
+    }
+    /**
+     * Разблокирует процесс миграции, обновляя статус блокировки в таблице `migration_lock`.
+     * Этот метод устанавливает столбец `locked` в `FALSE` и очищает поля `locked_at` и `locked_by`,
+     * указывая, что процесс миграции больше не выполняется.
+     *
+     * <p>Использование: Вызовите этот метод в конце процесса миграции, чтобы снять блокировку
+     * и позволить другим процессам выполнять миграцию.</p>
+     *
+     * @throws SQLException, если при взаимодействии с базой данных произошла ошибка.
+     */
+    public void unlockMigration() throws SQLException {
+        String sql = "UPDATE migration_lock SET locked = FALSE, locked_at = NULL, locked_by = NULL WHERE id = 1";
+        try (Statement statement = connection.createStatement()) {
+            statement.executeUpdate(sql);
         }
     }
     /**

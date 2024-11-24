@@ -1,5 +1,7 @@
 package org.example.main;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.configuration.PropertiesUtils;
 import org.example.db.ConnectionManager;
 import org.example.migrations.MigrationExecutor;
@@ -19,6 +21,8 @@ import java.sql.Connection;
  * - Выполняет миграции и откаты с помощью MigrationTool.
  * </p>
  */
+@Slf4j
+@RequiredArgsConstructor
 public class Main {
     private static final Logger logger = LoggerFactory.getLogger(Main.class);
     /**
@@ -45,6 +49,7 @@ public class Main {
             // Инициализация инструментов миграции
             MigrationExecutor migrationExecutor = new MigrationExecutor(connection, new MigrationFileReader());
             MigrationTool migrationTool = new MigrationTool(migrationExecutor, connection);
+
 
             // Выполнение миграций и откатов
             migrationTool.executeMigration();

@@ -39,13 +39,25 @@ public class MigrationTool {
      * Выполняет все ожидающие миграции, чтобы привести схему базы данных в актуальное состояние.
      * <p>
      * Этот метод считывает файлы миграций, сравнивает их версии с текущей версией базы данных,
-     * и применяет только необходимые миграции. Если возникает ошибка, процесс миграции откатывается.
+     * и применяет только необходимые миграции. Механизм блокировки гарантирует, что только один процесс может
+     * выполнять миграци. При возникновении ошибки процесс миграции откатывается, чтобы сохранить
+     *  целостности базы данных. Блокировка снимается по завершении процесса, независимо от успеха или неудачи.
+     *  Если возникает ошибка, процесс миграции откатывается.
      * </p>
      *
      * @throws SQLException, если во время миграции или отката произошла ошибка базы данных
      */
     public void executeMigration() throws SQLException {
         migrationExecutor.initializeSchemaTable();
+        migrationExecutor.initializeMigrationLockTable();
+        String lockedBy = "user-" + System.getProperty("user.name") + "-"
+                          + System.currentTimeMillis();
+
+        if (migrationExecutor.isLocked()) {
+            logger.error("Migration is already locked by another process.");
+            throw new IllegalStateException("Migration is locked. Another process is currently performing a migration.");
+        }
+        migrationExecutor.lockMigration(lockedBy);
         logger.info("Migration starts");
 
         try {
@@ -76,6 +88,7 @@ public class MigrationTool {
             throw new SQLException("Migration process failed", e);
         } finally {
             connection.setAutoCommit(true);
+            migrationExecutor.unlockMigration();
         }
     }
 

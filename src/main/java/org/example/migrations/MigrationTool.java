@@ -1,5 +1,9 @@
 package org.example.migrations;
 
+import org.example.migrations.fileReader.MigrationFile;
+import org.example.migrations.fileReader.MigrationFileReader;
+import org.example.migrations.report.MigrationReport;
+import org.example.migrations.report.MigrationReportGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

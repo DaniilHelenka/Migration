@@ -1,5 +1,5 @@
-import org.example.migrations.MigrationFile;
-import org.example.migrations.MigrationFileReader;
+import org.example.migrations.fileReader.MigrationFile;
+import org.example.migrations.fileReader.MigrationFileReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.io.IOException;

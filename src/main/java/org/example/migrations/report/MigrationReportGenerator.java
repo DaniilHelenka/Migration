@@ -1,4 +1,4 @@
-package org.example.migrations;
+package org.example.migrations.report;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

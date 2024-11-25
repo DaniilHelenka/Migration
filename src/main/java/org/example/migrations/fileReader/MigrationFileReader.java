@@ -1,4 +1,4 @@
-package org.example.migrations;
+package org.example.migrations.fileReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.configuration.PropertiesUtils;
 import org.example.db.ConnectionManager;
 import org.example.migrations.MigrationExecutor;
-import org.example.migrations.MigrationFileReader;
+import org.example.migrations.fileReader.MigrationFileReader;
 import org.example.migrations.MigrationTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package org.example.migrations;
+package org.example.migrations.report;
 /**
  * Представляет отчет по одной операции миграции, включая ее детали и результат.
  * <p>

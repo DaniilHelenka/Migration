@@ -1,4 +1,4 @@
-package org.example.migrations;
+package org.example.migrations.fileReader;
 /**
  * Представляет файл миграции или отката с версией, описанием и содержимым SQL.
  * <p>

@@ -1,43 +1,31 @@
 [ {
-  "version" : "2",
-  "description" : "create_table2",
-  "success" : true,
-  "timestamp" : "2024-11-25T12:33:42.157042400",
-  "errorMessage" : null
-}, {
   "version" : "3",
   "description" : "create_table3",
   "success" : true,
-  "timestamp" : "2024-11-25T12:33:42.181185900",
+  "timestamp" : "2024-11-25T14:47:24.031932500",
   "errorMessage" : null
 }, {
   "version" : "2",
   "description" : "rollback_file",
   "success" : true,
-  "timestamp" : "2024-11-25T12:33:48.713340600",
+  "timestamp" : "2024-11-25T14:47:39.231242900",
   "errorMessage" : null
 }, {
   "version" : "1",
   "description" : "rollback_file",
   "success" : true,
-  "timestamp" : "2024-11-25T12:33:48.739234100",
+  "timestamp" : "2024-11-25T14:47:39.257900",
   "errorMessage" : null
 }, {
   "version" : "2",
   "description" : "create_table2",
   "success" : true,
-  "timestamp" : "2024-11-25T12:33:52.657061900",
+  "timestamp" : "2024-11-25T14:47:47.983584200",
   "errorMessage" : null
 }, {
   "version" : "3",
   "description" : "create_table3",
   "success" : true,
-  "timestamp" : "2024-11-25T12:33:52.678326800",
-  "errorMessage" : null
-}, {
-  "version" : "2",
-  "description" : "rollback_file",
-  "success" : true,
-  "timestamp" : "2024-11-25T12:33:56.454318700",
+  "timestamp" : "2024-11-25T14:47:48.089961900",
   "errorMessage" : null
 } ]

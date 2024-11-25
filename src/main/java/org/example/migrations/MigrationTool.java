@@ -7,11 +7,14 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
 /**
- * Этот класс предоставляет функциональность для управления миграциями и откатами баз данных.
+ * Этот класс предоставляет функциональность для управления миграциями
+ * и откатами баз данных и генерации отчётов в виде файлов.
  * <p>
  * {@code MigrationTool} управляет выполнением SQL-скриптов миграции и сценариев отката.
  * на основе текущей версии схемы базы данных. Он использует MigrationExecutor для
@@ -23,6 +26,7 @@ public class MigrationTool {
     private final Connection connection;
     private static final Logger logger = LoggerFactory.getLogger(MigrationTool.class);
     private final MigrationFileReader migrationFileReader = new MigrationFileReader();
+    List<MigrationReport> reports = new ArrayList<>();
 
     /**
      * Конструирует инструмент MigrationTool с указанным исполнителем MigrationExecutor и подключением к базе данных.
@@ -47,7 +51,8 @@ public class MigrationTool {
      *
      * @throws SQLException, если во время миграции или отката произошла ошибка базы данных
      */
-    public void executeMigration() throws SQLException {
+    public void executeMigration() throws SQLException, IOException {
+
         migrationExecutor.initializeSchemaTable();
         migrationExecutor.initializeMigrationLockTable();
         String lockedBy = "user-" + System.getProperty("user.name") + "-"
@@ -75,6 +80,13 @@ public class MigrationTool {
                             migrationFile.getSql(),
                             "V" + migrationFile.getVersion() + "__rollback.sql"
                     );
+                    reports.add(new MigrationReport(
+                            migrationFile.getVersion(),
+                            migrationFile.getDescription(),
+                            true,
+                            LocalDateTime.now().toString(),
+                            null
+                    ));
                 }
             }
             connection.commit();
@@ -90,6 +102,9 @@ public class MigrationTool {
             connection.setAutoCommit(true);
             migrationExecutor.unlockMigration();
         }
+        MigrationReportGenerator reportGenerator = new MigrationReportGenerator();
+        reportGenerator.generateCsvReport(reports, "src/main/resources/reports/migration_report.csv");
+        reportGenerator.generateJsonReport(reports, "src/main/resources/reports/migration_report.json");
     }
 
     /**
@@ -103,7 +118,7 @@ public class MigrationTool {
      *
      * @throws SQLException, если во время отката или очистки произошла ошибка базы данных
      */
-    public void executeRollback() throws SQLException {
+    public void executeRollback() throws SQLException, IOException {
 
         Scanner scanner = new Scanner(System.in);
 
@@ -132,6 +147,15 @@ public class MigrationTool {
                         rollbackFile.getSql(),
                         rollbackFile.getVersion()
                 );
+                reports.add(new MigrationReport(
+                        rollbackFile.getVersion(),
+                        rollbackFile.getDescription(),
+                        true,
+                        LocalDateTime.now().toString(),
+                        null
+
+                ));
+
                 System.out.println(rollbackFile.getDescription() + rollbackFile.getSql() + rollbackFile.getVersion());
             }
 
@@ -151,6 +175,9 @@ public class MigrationTool {
         } finally {
             connection.setAutoCommit(true);
         }
+        MigrationReportGenerator reportGenerator = new MigrationReportGenerator();
+        reportGenerator.generateCsvReport(reports, "src/main/resources/reports/migration_report.csv");
+        reportGenerator.generateJsonReport(reports, "src/main/resources/reports/migration_report.json");
         logger.debug("Migration process ends");
     }
 }

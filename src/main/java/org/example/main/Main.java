@@ -65,6 +65,8 @@ public class Main {
                             System.out.println("Migrations applied successfully.");
                         } catch (SQLException e) {
                             System.err.println("Migration failed: " + e.getMessage());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
                         }
                         break;
 
@@ -74,6 +76,8 @@ public class Main {
                             System.out.println("Rollback completed successfully.");
                         } catch (SQLException e) {
                             System.err.println("Rollback failed: " + e.getMessage());
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
                         }
                         break;
 
